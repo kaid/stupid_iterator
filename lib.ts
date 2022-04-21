@@ -1,3 +1,7 @@
+export const collect = <T>(iterable: Iterable<T>): Array<T> => [
+    ...iterable,
+];
+
 export class Range implements Iterable<number>{
     public readonly end: number;
     public readonly start: number;
@@ -82,7 +86,7 @@ export class LazyBuffer<T> {
         if (!this.done && k > bufferLength) {
             const delta = k - bufferLength;
 
-            this.buffer = this.buffer.concat([...new Take(this.iterator, delta)]);
+            this.buffer = this.buffer.concat(collect(new Take(this.iterator, delta)));
             this.done = this.length < k;
         }
     }
@@ -94,7 +98,7 @@ export class Combinations<T> implements Iterable<Array<T>> {
     private indices: Array<number>;
 
     constructor(iterable: Iterable<T>, k: number) {
-        this.indices = [...new Range(0, k)];
+        this.indices = collect(new Range(0, k));
         this.pool = new LazyBuffer(iterable);
         this.pool.prefill(k);
     }
@@ -153,7 +157,7 @@ export class Combinations<T> implements Iterable<Array<T>> {
 
     private reset(k: number): void {
         this.first = true;
-        this.indices = [...new Range(0, k)];
+        this.indices = collect(new Range(0, k));
         this.pool.prefill(k);
     }
 }
