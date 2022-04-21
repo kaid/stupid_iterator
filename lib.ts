@@ -116,35 +116,35 @@ export class Combinations<T> implements Iterable<Array<T>> {
     }
 
     private *iterator(): Iterator<Array<T>> {
-        if (this.first) {
-            if (this.k > this.n) {
-                return;
-            }
-
-            this.first = false;
-        } else if (this.n === 0) {
-            return;
-        }
-
-        let indicesIdx = this.k - 1;
-
         while (true) {
-            if (this.indices[indicesIdx] === this.n -1) {
-                this.pool.fetch();
-            }
-
-            while (this.indices[indicesIdx] === indicesIdx + this.n - this.k) {
-                if (indicesIdx <= 0) {
+            if (this.first) {
+                if (this.k > this.n) {
                     return;
                 }
 
-                indicesIdx -= 1;
-            }
+                this.first = false;
+            } else if (this.n === 0) {
+                return;
+            } else {
+                let indicesIdx = this.k - 1;
 
-            this.indices[indicesIdx] += 1;
+                if (this.indices[indicesIdx] === this.n -1) {
+                    this.pool.fetch();
+                }
 
-            for (const j of new Range(indicesIdx + 1, this.k)) {
-                this.indices[j] = this.indices[j - 1] + 1;
+                while (this.indices[indicesIdx] === indicesIdx + this.n - this.k) {
+                    if (indicesIdx <= 0) {
+                        return;
+                    }
+
+                    indicesIdx -= 1;
+                }
+
+                this.indices[indicesIdx] += 1;
+
+                for (const j of new Range(indicesIdx + 1, this.k)) {
+                    this.indices[j] = this.indices[j - 1] + 1;
+                }
             }
 
             yield this.indices.map(bufferIdx => this.pool.get(bufferIdx));
