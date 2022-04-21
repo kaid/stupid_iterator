@@ -1,4 +1,45 @@
-import { cloneDeep, map, range } from 'lodash-es';
+export class Range implements Iterable<number>{
+    public readonly end: number;
+    public readonly start: number;
+
+    constructor(start: number, end: number) {
+        this.end = end;
+        this.start = start;
+    }
+
+    public [Symbol.iterator](): Iterator<number> {
+        return this.iterator();
+    }
+
+    private *iterator(): Iterator<number> {
+        let cursor = this.start;
+
+        while (cursor < this.end) {
+            yield cursor++;
+        }
+    }
+}
+
+export class Take<T> implements Iterable<T> {
+    private iter: Iterator<T>;
+    private readonly num: number;
+
+    constructor(iterator: Iterator<T>, num: number) {
+        this.num = num;
+        this.iter = iterator;
+    }
+
+    public [Symbol.iterator](): Iterator<T> {
+        return this.iterator();
+    }
+
+    private *iterator(): Iterator<T> {
+        for (let i = 0; i < this.num; i++) {
+            yield this.iter.next().value;
+        }
+    }
+}
+
 
 export class LazyBuffer<T> {
     public iterator: Iterator<T>;
@@ -41,19 +82,9 @@ export class LazyBuffer<T> {
         if (!this.done && k > bufferLength) {
             const delta = k - bufferLength;
 
-            this.buffer = this.buffer.concat(this.take(delta));
+            this.buffer = this.buffer.concat([...new Take(this.iterator, delta)]);
             this.done = this.length < k;
         }
-    }
-
-    private take(num: number): Array<T> {
-        const result = new Array(num);
-
-        for (let i = 0; i < num; i++) {
-            result[i] = this.iterator.next().value;
-        }
-
-        return result;
     }
 }
 
@@ -63,7 +94,7 @@ export class Combinations<T> implements Iterable<Array<T>> {
     private indices: Array<number>;
 
     constructor(iterable: Iterable<T>, k: number) {
-        this.indices = range(0, k);
+        this.indices = [...new Range(0, k)];
         this.pool = new LazyBuffer(iterable);
         this.pool.prefill(k);
     }
@@ -112,17 +143,17 @@ export class Combinations<T> implements Iterable<Array<T>> {
 
             this.indices[indicesIdx] += 1;
 
-            for (let j of range(indicesIdx + 1, this.k)) {
+            for (let j = indicesIdx + 1; j < this.k; j++) {
                 this.indices[j] = this.indices[j - 1] + 1;
             }
 
-            yield map(this.indices, bufferIdx => cloneDeep(this.pool.get(bufferIdx)));
+            yield this.indices.map(bufferIdx => this.pool.get(bufferIdx));
         }
     }
 
     private reset(k: number): void {
         this.first = true;
-        this.indices = range(0, k);
+        this.indices = [...new Range(0, k)];
         this.pool.prefill(k);
     }
 }
