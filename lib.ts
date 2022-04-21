@@ -126,7 +126,7 @@ export class Combinations<T> implements Iterable<Array<T>> {
             return;
         }
 
-        let indicesIdx = this.n - 1;
+        let indicesIdx = this.k - 1;
 
         while (true) {
             if (this.indices[indicesIdx] === this.n -1) {
