@@ -34,7 +34,7 @@ export class Take<T> implements Iterable<T> {
     }
 
     private *iterator(): Iterator<T> {
-        for (let i = 0; i < this.num; i++) {
+        for (const _ of new Range(0, this.num)) {
             yield this.iter.next().value;
         }
     }
@@ -143,7 +143,7 @@ export class Combinations<T> implements Iterable<Array<T>> {
 
             this.indices[indicesIdx] += 1;
 
-            for (let j = indicesIdx + 1; j < this.k; j++) {
+            for (const j of new Range(indicesIdx + 1, this.k)) {
                 this.indices[j] = this.indices[j - 1] + 1;
             }
 
