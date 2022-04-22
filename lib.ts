@@ -1,6 +1,4 @@
-export const collect = <T>(iterable: Iterable<T>): Array<T> => [
-    ...iterable,
-];
+export const collect = <T>(iterable: Iterable<T>): Array<T> => Array.from(iterable);
 
 export class Range implements Iterable<number>{
     public readonly end: number;
@@ -11,11 +9,7 @@ export class Range implements Iterable<number>{
         this.start = start;
     }
 
-    public [Symbol.iterator](): Iterator<number> {
-        return this.iterator();
-    }
-
-    private *iterator(): Iterator<number> {
+    public *[Symbol.iterator](): Iterator<number> {
         let cursor = this.start;
 
         while (cursor < this.end) {
@@ -28,22 +22,24 @@ export class Take<T> implements Iterable<T> {
     private iter: Iterator<T>;
     private readonly num: number;
 
-    constructor(iterator: Iterator<T>, num: number) {
+    constructor(iterable: Iterable<T>, num: number)
+    constructor(iterator: Iterator<T>, num: number)
+    constructor(iteration: Iterator<T> | Iterable<T>, num: number) {
         this.num = num;
-        this.iter = iterator;
+
+        if ('next' in iteration && iteration.next instanceof Function) {
+            this.iter = iteration;
+        } else {
+            this.iter = iteration[Symbol.iterator]();
+        }
     }
 
-    public [Symbol.iterator](): Iterator<T> {
-        return this.iterator();
-    }
-
-    private *iterator(): Iterator<T> {
+    public *[Symbol.iterator](): Iterator<T> {
         for (const _ of new Range(0, this.num)) {
             yield this.iter.next().value;
         }
     }
 }
-
 
 export class LazyBuffer<T> {
     public iterator: Iterator<T>;
@@ -81,7 +77,7 @@ export class LazyBuffer<T> {
     }
 
     public prefill(k: number): void {
-        let bufferLength = this.length;
+        const bufferLength = this.length;
 
         if (!this.done && k > bufferLength) {
             const delta = k - bufferLength;
@@ -111,15 +107,11 @@ export class Combinations<T> implements Iterable<Array<T>> {
         return this.pool.length;
     }
 
-    public [Symbol.iterator](): Iterator<Array<T>> {
+    public *[Symbol.iterator](): Iterator<Array<T>> {
         if (!this.first) {
             this.reset(this.k);
         }
 
-        return this.iterator();
-    }
-
-    private *iterator(): Iterator<Array<T>> {
         while (true) {
             if (this.first) {
                 if (this.k > this.n) {
@@ -157,7 +149,7 @@ export class Combinations<T> implements Iterable<Array<T>> {
 
     private reset(k: number): void {
         this.first = true;
-        this.indices = collect(new Range(0, k));
         this.pool.prefill(k);
+        this.indices = collect(new Range(0, k));
     }
 }
