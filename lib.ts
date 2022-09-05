@@ -170,7 +170,7 @@ type DfsYielded<T> = {
 }
 
 export function* dfsTraverse<T>({ iterable, childrenProp, skip, parent = null, indexSeq, level = 0 }: TraversalOption<T>): Generator<DfsYielded<T>> {
-    if (iterable?.[Symbol.iterator] instanceof Function) {
+    if (!(iterable?.[Symbol.iterator] instanceof Function)) {
         return;
     }
 
