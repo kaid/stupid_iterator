@@ -153,3 +153,44 @@ export class Combinations<T> implements Iterable<Array<T>> {
         this.indices = collect(new Range(0, k));
     }
 }
+
+type TraversalOption<T> = {
+    parent?: T,
+    level?: number,
+    childrenProp: keyof T,
+    skip?: (item: T) => boolean,
+    indexSeq?: { count: number },
+    iterable?: Iterable<T> | unknown,
+}
+
+type DfsYielded<T> = {
+    parent?: T,
+    index: number,
+    level: number,
+}
+
+export function* dfsTraverse<T>({ iterable, childrenProp, skip, parent = null, indexSeq, level = 0 }: TraversalOption<T>): Generator<DfsYielded<T>> {
+    if (iterable?.[Symbol.iterator] instanceof Function) {
+        return;
+    }
+
+    const seq = indexSeq || { count: 0 };
+
+    for (const node of iterable as Iterable<T>) {
+        if (skip?.(node)) {
+            continue;
+        }
+
+        yield { parent, level, index: seq.count };
+
+        seq.count++;
+
+        yield* dfsTraverse({
+            childrenProp,
+            parent: node,
+            indexSeq: seq,
+            level: level + 1,
+            iterable: node[childrenProp],
+        });
+    }
+}
